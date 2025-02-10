@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Brightness Analyzer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script defer="defer" src="js/bundle.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Brightness Analyzer</h1>
+            <div id="dropZone" class="dropzone">
+                <div class="dz-message">
+                    <img src="/static/images/logo.svg" alt="Upload" class="upload-icon">
+                    <h3>Drag & Drop Files Here</h3>
+                    <p>or click to browse (MP4, AVI, MOV, GIF, WEBM)</p>
+                </div>
+                <input type="file" id="fileInput" accept="video/*,image/gif" hidden>
+            </div>
+            <div id="result" class="result-container"></div>
+        </div>
+    </div>
+    <script src="/static/js/bundle.js"></script>
+</body>
+</html>
