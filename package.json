@@ -7,6 +7,7 @@
         "start": "serve public"
     },
     "dependencies": {
+        "brightness-detector-ts": "file:",
         "typescript": "^5.0.4"
     },
     "devDependencies": {

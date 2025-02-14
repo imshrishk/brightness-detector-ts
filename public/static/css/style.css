@@ -7,6 +7,7 @@
     --text-light: #64748b;
     --border: #e2e8f0;
     --error: #ef4444;
+    --success: #22c55e;
 }
 
 * {
@@ -21,6 +22,7 @@ body {
     color: var(--text);
     line-height: 1.5;
     padding: 2rem;
+    min-height: 100vh;
 }
 
 .container {
@@ -30,19 +32,19 @@ body {
 
 .header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
 }
 
 .header h1 {
     font-size: 2.5rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     background: linear-gradient(45deg, var(--primary), var(--primary-dark));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-.header p {
+.subtitle {
     color: var(--text-light);
     font-size: 1.1rem;
 }
@@ -63,111 +65,118 @@ body {
     background-color: #f0f7ff;
 }
 
-.drop-zone .icon {
-    font-size: 3rem;
+.drop-zone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.upload-icon {
     color: var(--primary);
     margin-bottom: 1rem;
 }
 
-.drop-zone h3 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.drop-zone p {
-    color: var(--text-light);
-}
-
-.supported-formats {
+.drop-zone-hint {
     font-size: 0.875rem;
     color: var(--text-light);
-    margin-top: 1rem;
 }
 
-#fileInput {
-    display: none;
+.results-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
 }
 
 .result-card {
     background-color: var(--card);
     border-radius: 1rem;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    padding: 2rem;
-    margin-bottom: 2rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
 }
 
-.result-card h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
+.result-card:hover {
+    transform: translateY(-2px);
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.result-title {
+    font-weight: 600;
     color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
 }
 
-#resultCanvas {
+.result-status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 500;
+}
+
+.status-processing {
+    background-color: #f0f7ff;
+    color: var(--primary);
+}
+
+.status-completed {
+    background-color: #f0fdf4;
+    color: var(--success);
+}
+
+.status-error {
+    background-color: #fef2f2;
+    color: var(--error);
+}
+
+.result-canvas {
     width: 100%;
-    max-height: 500px;
+    height: 200px;
     object-fit: contain;
+    margin-bottom: 1rem;
     border-radius: 0.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.metrics {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-}
-
-.metric {
     background-color: #f8fafc;
-    padding: 1.25rem;
+}
+
+.result-metrics {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: var(--background);
     border-radius: 0.5rem;
-    border: 1px solid var(--border);
 }
 
-.metric .label {
-    display: block;
-    color: var(--text-light);
+.metric-label {
     font-size: 0.875rem;
-    margin-bottom: 0.5rem;
+    color: var(--text-light);
 }
 
-.metric .value {
-    display: block;
-    font-size: 1.5rem;
+.metric-value {
     font-weight: 600;
     color: var(--text);
 }
 
-.loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    color: var(--text-light);
-}
-
-.error {
-    background-color: #fef2f2;
+.error-message {
     color: var(--error);
     padding: 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid #fee2e2;
     text-align: center;
-}
-
-@media (max-width: 768px) {
-    body {
-        padding: 1rem;
-    }
-
-    .header h1 {
-        font-size: 2rem;
-    }
-
-    .drop-zone {
-        padding: 2rem 1rem;
-    }
-
-    .metrics {
-        grid-template-columns: 1fr;
-    }
+    border-radius: 0.5rem;
+    background-color: #fef2f2;
+    margin-top: 1rem;
 }

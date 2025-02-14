@@ -3,31 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Brightness Analyzer</title>
-    <link rel="stylesheet" href="static/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <title>Video Brightness Detector</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <h1>Video Brightness Analyzer</h1>
-            <p>Upload your video to detect and analyze the brightest points</p>
-        </header>
-
+        <div class="header">
+            <h1>Video Brightness Detector</h1>
+            <p class="subtitle">Upload a video or image to detect its brightest point</p>
+        </div>
+        
         <div id="dropZone" class="drop-zone">
-            <i class="fas fa-cloud-upload-alt icon"></i>
-            <h3>Drag & Drop your video</h3>
-            <p>or click to browse files</p>
-            <div class="supported-formats">
-                Supported formats: MP4, WebM, MOV
+            <div class="drop-zone-content">
+                <div class="upload-icon">📁</div>
+                <p>Drag and drop your file here or click to browse</p>
+                <p class="drop-zone-hint">Supports video and image files</p>
             </div>
+            <input type="file" id="fileInput" accept="video/*,image/*" style="display: none">
         </div>
 
-        <input type="file" id="fileInput" accept="video/*">
-        
-        <div id="result"></div>
+        <div id="resultsContainer" class="results-container"></div>
     </div>
-    <script src="static/js/bundle.js"></script>
+    <script src="/static/js/bundle.js"></script>
 </body>
 </html>

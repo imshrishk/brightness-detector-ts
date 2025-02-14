@@ -1,92 +1,138 @@
-import { AnalysisResult } from './types';
-import { analyzeBrightness } from './lib/analyzer';
-import { setupDragAndDrop } from './lib/utils';
+interface ProcessedFile {
+    id: string;
+    file: File;
+    status: 'processing' | 'completed' | 'error';
+    result?: AnalysisResult;
+    error?: string;
+}
 
-export function initializeApp() {
-    setupDragAndDrop(
-        document.getElementById('dropZone')!,
-        document.getElementById('fileInput') as HTMLInputElement,
-        async (file: File) => {
-            try {
-                showLoading();
-                const result = await analyzeBrightness(file);
-                displayResults(result);
-            } catch (error) {
-                showError(error instanceof Error ? error.message : 'Processing failed');
-            }
+class BrightnessAnalyzer {
+    private processedFiles: ProcessedFile[] = [];
+    private readonly CONCURRENCY_LIMIT = 4;
+
+    constructor() {
+        this.initialize();
+    }
+
+    private initialize() {
+        setupDragAndDrop(
+            document.getElementById('dropZone')!,
+            document.getElementById('fileInput') as HTMLInputElement,
+            (files: File[]) => this.handleFiles(files)
+        );
+    }
+
+    private async handleFiles(files: File[]) {
+        this.processedFiles = files.map(file => ({
+            id: Math.random().toString(36).slice(2, 11),
+            file,
+            status: 'processing'
+        }));
+        this.renderResults();
+
+        const batches = [];
+        for (let i = 0; i < files.length; i += this.CONCURRENCY_LIMIT) {
+            batches.push(files.slice(i, i + this.CONCURRENCY_LIMIT));
         }
-    );
-}
 
-function showLoading() {
-    const resultDiv = document.getElementById('result')!;
-    resultDiv.innerHTML = `
-        <div class="loading">
-            <i class="fas fa-spinner fa-spin"></i>
-            Analyzing video...
-        </div>
-    `;
-}
+        for (const batch of batches) {
+            await Promise.all(batch.map(file => this.processFile(file)));
+        }
+    }
 
-function displayResults(result: AnalysisResult) {
-    const resultDiv = document.getElementById('result')!;
-    resultDiv.innerHTML = `
-        <div class="result-card">
-            <h3>Analysis Results</h3>
-            <canvas id="resultCanvas"></canvas>
-            <div class="metrics">
-                <div class="metric">
-                    <span class="label">Maximum Brightness</span>
-                    <span class="value">${result.maxBrightness.toFixed(1)}</span>
+    private async processFile(file: File) {
+        try {
+            const result = await analyzeBrightness(file);
+            this.updateFileStatus(file.name, 'completed', result);
+        } catch (error) {
+            this.updateFileStatus(
+                file.name,
+                'error',
+                undefined,
+                error instanceof Error ? error.message : 'Processing failed'
+            );
+        }
+    }
+
+    private updateFileStatus(
+        fileName: string,
+        status: 'completed' | 'error',
+        result?: AnalysisResult,
+        error?: string
+    ) {
+        this.processedFiles = this.processedFiles.map(pf =>
+            pf.file.name === fileName ? {
+                ...pf,
+                status,
+                result,
+                error
+            } : pf
+        );
+        this.renderResults();
+    }
+
+    private renderResults() {
+        const container = document.getElementById('resultsContainer')!;
+        container.innerHTML = this.processedFiles.map(file => `
+            <div class="result-card">
+                <div class="result-header">
+                    <div class="result-title" title="${file.file.name}">${file.file.name}</div>
+                    <div class="result-status status-${file.status}">
+                        ${file.status.toUpperCase()}
+                    </div>
                 </div>
-                <div class="metric">
-                    <span class="label">Average Brightness (10px Radius)</span>
-                    <span class="value">${result.radiusMean.toFixed(1)}</span>
-                </div>
-                <div class="metric">
-                    <span class="label">Location (X, Y)</span>
-                    <span class="value">${result.brightestX}, ${result.brightestY}</span>
-                </div>
+                ${file.status === 'completed' ? `
+                    <canvas class="result-canvas" id="canvas-${file.id}"></canvas>
+                    <div class="result-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">Max Brightness</span>
+                            <span class="metric-value">${file.result!.maxBrightness.toFixed(1)}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Average (10px radius)</span>
+                            <span class="metric-value">${file.result!.radiusMean.toFixed(1)}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Location (x, y)</span>
+                            <span class="metric-value">${file.result!.brightestX}, ${file.result!.brightestY}</span>
+                        </div>
+                    </div>
+                ` : ''}
+                ${file.status === 'error' ? `
+                    <div class="error-message">${file.error}</div>
+                ` : ''}
             </div>
-        </div>
-    `;
+        `).join('');
 
-    const canvas = document.getElementById('resultCanvas') as HTMLCanvasElement;
-    const ctx = canvas.getContext('2d')!;
-    
-    //Set canvas size while maintaining aspect ratio
-    const maxWidth = resultDiv.clientWidth - 64;
-    const scale = maxWidth / result.frame.width;
-    canvas.width = result.frame.width;
-    canvas.height = result.frame.height;
-    
-    //Draw the frame
-    ctx.putImageData(result.frame, 0, 0);
-    
-    //Draw target indicator
-    ctx.beginPath();
-    ctx.arc(result.brightestX, result.brightestY, 10, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    
-    //Draw crosshair
-    ctx.beginPath();
-    ctx.moveTo(result.brightestX - 15, result.brightestY);
-    ctx.lineTo(result.brightestX + 15, result.brightestY);
-    ctx.moveTo(result.brightestX, result.brightestY - 15);
-    ctx.lineTo(result.brightestX, result.brightestY + 15);
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-}
+        this.processedFiles
+            .filter(file => file.status === 'completed')
+            .forEach(file => this.renderCanvas(file));
+    }
 
-function showError(message: string) {
-    const resultDiv = document.getElementById('result')!;
-    resultDiv.innerHTML = `
-        <div class="error">
-            <i class="fas fa-exclamation-circle"></i>
-            ${message}
-        </div>
-    `;
+    private renderCanvas(file: ProcessedFile) {
+        const canvas = document.getElementById(`canvas-${file.id}`) as HTMLCanvasElement;
+        if (!canvas || !file.result) return;
+
+        const ctx = canvas.getContext('2d')!;
+        const { frame, brightestX, brightestY } = file.result;
+
+        canvas.width = frame.width;
+        canvas.height = frame.height;
+
+        ctx.putImageData(frame, 0, 0);
+
+        // Draw crosshair
+        ctx.beginPath();
+        ctx.arc(brightestX, brightestY, 10, 0, Math.PI * 2);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(brightestX - 15, brightestY);
+        ctx.lineTo(brightestX + 15, brightestY);
+        ctx.moveTo(brightestX, brightestY - 15);
+        ctx.lineTo(brightestX, brightestY + 15);
+        ctx.stroke();
+    }
 }
